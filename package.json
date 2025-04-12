@@ -1,0 +1,37 @@
+{
+  "name": "profinanzas-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^2.2.0",
+    "@react-pdf/renderer": "^4.3.0",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "chart.js": "^4.4.8",
+    "date-fns": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "next": "15.2.2",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-hot-toast": "^2.5.2",
+    "recharts": "^2.15.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/forms": "^0.5.10",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.2",
+    "postcss": "^8.4.23",
+    "tailwindcss": "^3.3.0"
+  }
+}
