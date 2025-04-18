@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { clientesService, prestamosService } from '@/lib/supabase';
 import { PencilSquareIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { getCurrentUser } from '@/lib/auth';
@@ -21,55 +21,17 @@ export default function ClienteDetallePage({ params }) {
   useEffect(() => {
     const fetchClienteData = async () => {
       try {
+        setLoading(true);
         // Obtener el usuario actual
         const currentUser = await getCurrentUser();
         setUsuario(currentUser);
 
-        // En un sistema real, estos datos vendrían de Supabase
-        // Por ahora, usamos datos de ejemplo
-        // Simular datos de cliente
-        const clienteData = {
-          id: parseInt(clienteId),
-          nombre: 'María',
-          apellido: 'López',
-          dni: '45678912',
-          telefono: '987654321',
-          direccion: 'Av. Los Pinos 123',
-          referencias: 'Cerca al mercado central St',
-          created_at: '2025-02-15T10:30:00',
-          historial_pagos: 'Bueno', // Simulando historial
-          asesor_id: '843515ad-da66-4c94-98c5-b6e89a53e6a0' // Agregamos el ID del asesor
-        };
-
-        // Simular préstamos del cliente
-        const prestamosData = [
-          {
-            id: 101,
-            cliente_id: parseInt(clienteId),
-            monto: 1000,
-            interes: 10,
-            monto_total: 1100,
-            frecuencia_pago: 'diario',
-            total_cuotas: 30,
-            cuotas_pagadas: 15,
-            estado: 'activo',
-            created_at: '2025-03-01T14:30:00'
-          },
-          {
-            id: 102,
-            cliente_id: parseInt(clienteId),
-            monto: 500,
-            interes: 10,
-            monto_total: 550,
-            frecuencia_pago: 'semanal',
-            total_cuotas: 8,
-            cuotas_pagadas: 8,
-            estado: 'completado',
-            created_at: '2025-01-15T09:45:00'
-          }
-        ];
-
+        // Obtener datos del cliente desde Supabase
+        const clienteData = await clientesService.getById(clienteId);
         setCliente(clienteData);
+
+        // Obtener préstamos del cliente desde Supabase
+        const prestamosData = await prestamosService.getByCliente(clienteId);
         setPrestamos(prestamosData);
       } catch (error) {
         console.error('Error al obtener datos del cliente:', error);
@@ -87,7 +49,7 @@ export default function ClienteDetallePage({ params }) {
     const checkAccess = async () => {
       try {
         const currentUser = await getCurrentUser();
-        
+
         // Verificar si el usuario tiene acceso a este cliente específico
         if (currentUser.rol === 'asesor') {
           // Verificar si el cliente pertenece a este asesor
@@ -97,15 +59,19 @@ export default function ClienteDetallePage({ params }) {
             return;
           }
         } else if (currentUser.rol === 'supervisor') {
+          // Obtener los IDs de los asesores que supervisa
+          const { data: asesores, error: errorAsesores } = await supabase
+            .from('usuarios')
+            .select('id')
+            .eq('supervisor_id', currentUser.id);
+          
+          if (errorAsesores) {
+            throw errorAsesores;
+          }
+
           // Verificar si el cliente pertenece a un asesor supervisado
-          // En un sistema real, esto sería una consulta más compleja
-          // Simulamos asesores supervisados
-            // En un sistema real, esto vendría de la base de datos
-          const asesoresSupervisa = 
-            currentUser.id === 'a9ce19f1-1ce0-4d78-a657-fd92eae4bfef' ? ['843515ad-da66-4c94-98c5-b6e89a53e6a0', '2'] : 
-            currentUser.id === '2' ? ['3', '4'] : [];
-          //const asesoresSupervisa = currentUser.asesoresAsignados || [];
-          if (cliente && !asesoresSupervisa.includes(cliente.asesor_id)) {
+          const asesorIds = asesores?.map(asesor => asesor.id) || [];
+          if (cliente && !asesorIds.includes(cliente.asesor_id)) {
             toast.error('No tienes permiso para ver este cliente Supervisor');
             router.push('/clientes');
             return;
@@ -114,9 +80,10 @@ export default function ClienteDetallePage({ params }) {
         // Los administradores pueden ver todos los clientes
       } catch (error) {
         console.error('Error al verificar permisos:', error);
+        toast.error('Error al verificar permisos');
       }
     };
-    
+
     if (cliente) {
       checkAccess();
     }
@@ -188,12 +155,10 @@ export default function ClienteDetallePage({ params }) {
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Asignación</h3>
               <p className="text-sm text-gray-900">
-                <span className="font-medium">Asesor asignado:</span> {' '}
-                {cliente.asesor_id === '1' ? 'Juan Pérez' : 
-                 cliente.asesor_id === '2' ? 'María López' : 
-                 cliente.asesor_id === '3' ? 'Carlos González' : 
-                 cliente.asesor_id === '4' ? 'Ana Martínez' : 'No asignado'}
-              </p>
+                <span className="font-medium">Asesor asignado:</span>{' '}
+                {/* Reemplazar por la consulta del nombre real del asesor */}
+                {cliente.asesor_id}
+                </p>
             </div>
           )}
         </div>
