@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { clientesService } from '@/lib/supabase';
+import { clientesService, usuariosService } from '@/lib/supabase'; // Importa los servicios de Supabase
 import { getCurrentUser } from '@/lib/auth';
 import ClienteForm from '@/components/clientes/cliente-form';
 import toast from 'react-hot-toast';
@@ -16,52 +16,35 @@ export default function EditarClientePage({ params }) {
   const [asesores, setAsesores] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         // Obtener usuario actual
         const currentUser = await getCurrentUser();
         setUsuario(currentUser);
 
-        // En un sistema real, estos datos vendrían de Supabase
-        // Por ahora, usamos datos de ejemplo
-        const clienteData = {
-          id: parseInt(clienteId),
-          nombre: 'María',
-          apellido: 'López',
-          dni: '45678912',
-          telefono: '987654321',
-          direccion: 'Av. Los Pinos 123',
-          referencias: 'Cerca al mercado central',
-          created_at: '2025-02-15T10:30:00',
-          asesor_id: '1' // Añadimos el ID del asesor asignado
-        };
-        
+        // Obtener datos del cliente desde Supabase
+        const clienteData = await clientesService.getById(clienteId);
         setCliente(clienteData);
-        
-        // Obtener lista de asesores según el rol
+
+        // Obtener lista de asesores según el rol desde Supabase
         let asesoresData = [];
         if (currentUser) {
           if (['administrador', 'admin_sistema'].includes(currentUser.rol)) {
-            // Los administradores pueden ver todos los asesores
-            asesoresData = [
-              { id: '1', nombre: 'Juan', apellido: 'Pérez' },
-              { id: '2', nombre: 'María', apellido: 'López' },
-              { id: '3', nombre: 'Carlos', apellido: 'González' },
-              { id: '4', nombre: 'Ana', apellido: 'Martínez' }
-            ];
-          } else if (currentUser.rol === 'supervisor') {
-            // Los supervisores ven solo los asesores que supervisan
-            asesoresData = [
-              { id: '1', nombre: 'Juan', apellido: 'Pérez' },
-              { id: '2', nombre: 'María', apellido: 'López' }
-            ];
-          }
-          // Los asesores no necesitan cargar la lista
+            // Los administradores pueden ver todos los usuarios con rol asesor
+            const allUsers = await usuariosService.getAll();
+            asesoresData = allUsers.filter(user => user.rol === 'asesor').map(asesor => ({
+                id: asesor.id,
+                nombre: asesor.nombre,
+                apellido: asesor.apellido,
+            }));
+          } 
+          // Los asesores no necesitan cargar la lista y los supervisores no pueden ver porque no pueden editar
         }
-        
         setAsesores(asesoresData);
+
       } catch (error) {
         console.error('Error al obtener datos:', error);
         toast.error('Error al cargar los datos del cliente');
@@ -69,14 +52,14 @@ export default function EditarClientePage({ params }) {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [clienteId]);
-  
+
   const handleSuccess = () => {
     router.push(`/clientes/${clienteId}`);
   };
-  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -84,7 +67,7 @@ export default function EditarClientePage({ params }) {
       </div>
     );
   }
-  
+
   if (!cliente) {
     return (
       <div className="text-center py-10">
@@ -98,7 +81,7 @@ export default function EditarClientePage({ params }) {
       </div>
     );
   }
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -110,7 +93,7 @@ export default function EditarClientePage({ params }) {
           Volver
         </button>
       </div>
-      
+
       <div className="bg-white shadow rounded-lg p-6">
         <ClienteForm
           cliente={cliente}
