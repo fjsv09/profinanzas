@@ -12,42 +12,26 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState([]);
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchClientesYUsuario = async () => {
+      setLoading(true);
+      setError(null);
       try {
         // Obtener el usuario actual
         const currentUser = await getCurrentUser();
         setUsuario(currentUser);
 
-        // En un sistema real, estos datos vendrían de Supabase con filtros basados en el rol
-        // Por ahora, simulamos los datos y el filtrado
-        let clientesData = [
-          { id: 1, nombre: 'María', apellido: 'López', dni: '45678912', telefono: '987654321', direccion: 'Av. Los Pinos 123', created_at: '2025-02-15T10:30:00', asesor_id: '843515ad-da66-4c94-98c5-b6e89a53e6a0' },
-          { id: 2, nombre: 'Juan', apellido: 'Pérez', dni: '12345678', telefono: '987123456', direccion: 'Jr. Las Flores 456', created_at: '2025-03-01T14:20:00', asesor_id: '2' },
-          { id: 3, nombre: 'Ana', apellido: 'García', dni: '87654321', telefono: '987789123', direccion: 'Calle Los Alamos 789', created_at: '2025-03-05T16:45:00', asesor_id: '3' },
-          { id: 4, nombre: 'Carlos', apellido: 'Rodríguez', dni: '78912345', telefono: '987456789', direccion: 'Av. La Marina 234', created_at: '2025-03-10T09:15:00', asesor_id: '4' },
-          { id: 5, nombre: 'Lucía', apellido: 'Mendoza', dni: '56789123', telefono: '987321654', direccion: 'Jr. Huallaga 567', created_at: '2025-03-12T11:30:00', asesor_id: '843515ad-da66-4c94-98c5-b6e89a53e6a0' }
-        ];
-
-        // Filtrar según el rol del usuario (simulación del filtrado de la base de datos)
+        // Obtener los clientes filtrados por rol
         if (currentUser) {
-          if (currentUser.rol === 'asesor') {
-            // El asesor solo ve sus clientes
-            clientesData = clientesData.filter(cliente => cliente.asesor_id === currentUser.id);
-          } else if (currentUser.rol === 'supervisor') {
-            // Simulamos que el supervisor 1 supervisa a los asesores 1 y 2
-            const asesoresSupervisa = currentUser.id === 'a9ce19f1-1ce0-4d78-a657-fd92eae4bfef' ? ['843515ad-da66-4c94-98c5-b6e89a53e6a0', '2'] : 
-                                     currentUser.id === '2' ? ['3', '4'] : [];
-            clientesData = clientesData.filter(cliente => asesoresSupervisa.includes(cliente.asesor_id));
-          }
-          // Los administradores ven todos los clientes
+          const clientesData = await clientesService.getAll(currentUser);
+          setClientes(clientesData);
         }
-
-        setClientes(clientesData);
-      } catch (error) {
-        console.error('Error al obtener clientes:', error);
+      } catch (err) {
+        setError(err);
+        console.error('Error al obtener clientes:', err);
         toast.error('Error al cargar los clientes');
       } finally {
         setLoading(false);
@@ -60,13 +44,17 @@ export default function ClientesPage() {
   const handleDelete = async (id) => {
     if (confirm('¿Está seguro que desea eliminar este cliente?')) {
       try {
-        // En un sistema real, esto llamaría a clientesService.delete(id)
-        // Por ahora, simplemente actualizamos el estado
+        setLoading(true);
+        // Eliminar el cliente de Supabase
+        await clientesService.delete(id);
+        // Actualizar el estado local (eliminar el cliente de la lista)
         setClientes(clientes.filter(cliente => cliente.id !== id));
         toast.success('Cliente eliminado con éxito');
-      } catch (error) {
-        console.error('Error al eliminar cliente:', error);
+      } catch (err) {
+        console.error('Error al eliminar cliente:', err);
         toast.error('Error al eliminar el cliente');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -75,6 +63,13 @@ export default function ClientesPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Error: {error.message}</p>
       </div>
     );
   }
