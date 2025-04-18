@@ -535,24 +535,3 @@ CREATE INDEX idx_detalles_pago_pago_id ON detalles_pago(pago_id);
 CREATE INDEX idx_detalles_pago_prestamo_id ON detalles_pago(prestamo_id);
 
 
-
-INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, referencias, historial_pagos, created_by, asesor_id) VALUES ('12345678', 'Juan', 'Pérez', '987654321', 'Calle A #123', 'Vecino B', 'Nuevo', (SELECT id FROM usuarios WHERE email = 'fjsv@profinanzas.com'), (SELECT id FROM usuarios WHERE email = 'sthywar@profinanzas.com'));
-INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, referencias, historial_pagos, created_by, asesor_id) VALUES ('87654321', 'María', 'López', '912345678', 'Calle B #456', 'Familiar C', 'Bueno', (SELECT id FROM usuarios WHERE email = 'fjsv@profinanzas.com'), (SELECT id FROM usuarios WHERE email = 'sthywar@profinanzas.com'));
-INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, referencias, historial_pagos, created_by, asesor_id) VALUES ('23456789', 'Carlos', 'Gómez', '923456789', 'Calle C #789', 'Colega D', 'Regular', (SELECT id FROM usuarios WHERE email = 'fjsv@profinanzas.com'), (SELECT id FROM usuarios WHERE email = 'sthywar@profinanzas.com'));
-INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, referencias, historial_pagos, created_by, asesor_id) VALUES ('98765432', 'Ana', 'Martínez', '934567890', 'Calle D #101', 'Amigo E', 'Malo', (SELECT id FROM usuarios WHERE email = 'fjsv@profinanzas.com'), (SELECT id FROM usuarios WHERE email = 'sthywar@profinanzas.com'));
-INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, referencias, historial_pagos, created_by, asesor_id) VALUES ('34567890', 'Pedro', 'Rodríguez', '945678901', 'Calle E #112', 'Compañero F', 'Nuevo', (SELECT id FROM usuarios WHERE email = 'fjsv@profinanzas.com'), (SELECT id FROM usuarios WHERE email = 'sthywar@profinanzas.com'));
-
-
-CREATE TABLE clientes (
-    id SERIAL PRIMARY KEY,
-    dni TEXT NOT NULL UNIQUE,
-    nombre TEXT NOT NULL,
-    apellido TEXT NOT NULL,
-    telefono TEXT NOT NULL,
-    direccion TEXT NOT NULL,
-    referencias TEXT,
-    historial_pagos TEXT DEFAULT 'Nuevo' CHECK (historial_pagos IN ('Nuevo', 'Bueno', 'Regular', 'Malo')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_by UUID REFERENCES usuarios(id)
-);

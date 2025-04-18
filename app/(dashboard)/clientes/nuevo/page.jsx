@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, clientesService } from '@/lib/supabase';
 import ClienteForm from '@/components/clientes/cliente-form';
 import toast from 'react-hot-toast';
 
@@ -12,9 +12,12 @@ export default function NuevoClientePage() {
   const [usuario, setUsuario] = useState(null);
   const [asesores, setAsesores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
         // Obtener usuario actual
         const currentUser = await getCurrentUser();
@@ -25,27 +28,20 @@ export default function NuevoClientePage() {
         if (currentUser) {
           if (['administrador', 'admin_sistema'].includes(currentUser.rol)) {
             // Los administradores pueden ver todos los asesores
-            // En un sistema real, esto vendría de Supabase
-            asesoresData = [
-              { id: '1', nombre: 'Juan', apellido: 'Pérez' },
-              { id: '2', nombre: 'María', apellido: 'López' },
-              { id: '3', nombre: 'Carlos', apellido: 'González' },
-              { id: '4', nombre: 'Ana', apellido: 'Martínez' }
-            ];
-          } else if (currentUser.rol === 'supervisor') {
-            // Los supervisores ven solo los asesores que supervisan
-            // Simulando datos - en un sistema real esto vendría de Supabase
-            asesoresData = [
-              { id: '1', nombre: 'Juan', apellido: 'Pérez' },
-              { id: '2', nombre: 'María', apellido: 'López' }
-            ];
-          }
-          // Los asesores no necesitan cargar la lista ya que se les asigna automáticamente
+            const { data, error } = await supabase
+              .from('usuarios')
+              .select('id, nombre, apellido')
+              .eq('rol', 'asesor');
+            if (error) throw error;
+            asesoresData = data;
+          } 
+          // Los asesores no necesitan cargar la lista ya que se les asigna automáticamente y los supervisores tampoco porque no pueden editar
         }
-        
+
         setAsesores(asesoresData);
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
+      } catch (err) {
+        setError(err);
+        console.error('Error al cargar datos:', err);
         toast.error('Error al cargar datos necesarios');
       } finally {
         setLoading(false);
@@ -66,6 +62,13 @@ export default function NuevoClientePage() {
       </div>
     );
   }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -80,10 +83,10 @@ export default function NuevoClientePage() {
       </div>
 
       <div className="bg-white shadow rounded-lg p-6">
-        <ClienteForm 
+        <ClienteForm
           usuario={usuario}
           asesores={asesores}
-          onSuccess={handleSuccess} 
+          onSuccess={handleSuccess}
           onCancel={() => router.back()}
         />
       </div>

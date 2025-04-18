@@ -35,42 +35,39 @@ export default function ClienteForm({ cliente, usuario, asesores = [], onSuccess
       // Validación básica
       if (!formData.dni || !formData.nombre || !formData.apellido || !formData.telefono || !formData.direccion) {
         toast.error('Por favor complete todos los campos obligatorios');
-        setIsSubmitting(false);
         return;
       }
 
       // Validación de DNI (8 dígitos)
       if (!/^\d{8}$/.test(formData.dni)) {
         toast.error('El DNI debe tener 8 dígitos numéricos');
-        setIsSubmitting(false);
         return;
       }
 
       // Validación de teléfono (9 dígitos)
       if (!/^\d{9}$/.test(formData.telefono)) {
         toast.error('El teléfono debe tener 9 dígitos numéricos');
-        setIsSubmitting(false);
         return;
       }
 
       // Validar que se haya seleccionado un asesor
       if (!formData.asesor_id) {
         toast.error('Por favor asigne un asesor al cliente');
-        setIsSubmitting(false);
         return;
+      }
+
+      const clienteData = {
+        ...formData,
+        created_by: usuario.id,
       }
 
       if (isEditing) {
         // Actualizar cliente existente
-        // En un sistema real, esto llamaría a clientesService.update
-        console.log('Actualizando cliente:', { id: cliente.id, ...formData });
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulación de latencia
+        await clientesService.update(cliente.id, clienteData);
         toast.success('Cliente actualizado con éxito');
       } else {
         // Crear nuevo cliente
-        // En un sistema real, esto llamaría a clientesService.create
-        console.log('Creando nuevo cliente:', formData);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulación de latencia
+        await clientesService.create(clienteData);
         toast.success('Cliente creado con éxito');
       }
 
