@@ -1,16 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { clientesService, usuariosService } from '@/lib/supabase'; // Importa los servicios de Supabase
+import { useRouter, useParams } from 'next/navigation';
+import { clientesService, usuariosService } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import ClienteForm from '@/components/clientes/cliente-form';
 import toast from 'react-hot-toast';
-import { use } from 'react'; // Importa use desde React
 
-export default function EditarClientePage({ params }) {
-  // Usa React.use() para desenvolver el objeto params
-  const unwrappedParams = use(params);
-  const clienteId = unwrappedParams.id;
+export default function EditarClientePage() {
+  const { id: clienteId } = useParams();
+
   const [cliente, setCliente] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [asesores, setAsesores] = useState([]);
@@ -40,8 +38,15 @@ export default function EditarClientePage({ params }) {
                 nombre: asesor.nombre,
                 apellido: asesor.apellido,
             }));
-          } 
-          // Los asesores no necesitan cargar la lista y los supervisores no pueden ver porque no pueden editar
+          } else if (currentUser.rol === 'supervisor') {
+            // Los supervisores ven solo los asesores que supervisan
+            const allUsers = await usuariosService.getAll();
+            asesoresData = allUsers.filter(user => user.supervisor_id === currentUser.id).map(asesor => ({
+                id: asesor.id,
+                nombre: asesor.nombre,
+                apellido: asesor.apellido,
+            }));
+          }
         }
         setAsesores(asesoresData);
 
@@ -54,6 +59,7 @@ export default function EditarClientePage({ params }) {
     };
 
     fetchData();
+    
   }, [clienteId]);
 
   const handleSuccess = () => {
@@ -63,7 +69,7 @@ export default function EditarClientePage({ params }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
       </div>
     );
   }

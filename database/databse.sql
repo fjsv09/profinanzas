@@ -282,6 +282,7 @@ CREATE TABLE clientes (
     asesor_id UUID NOT NULL REFERENCES usuarios(id),
     asignado_desde TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+--AGREGAR UN CAMPO EN LA TABLA CLIENTES PARA SABER ACTIVO O INACTIVO
 
 -- Tabla de préstamos
 CREATE TABLE prestamos (
