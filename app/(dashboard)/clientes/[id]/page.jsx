@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { UserIcon, PencilSquareIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
+import EmptyState from '@/components/common/EmptyState';
 import { clientesService, prestamosService, usuariosService, supabase } from '@/lib/supabase';
-import { PencilSquareIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { getCurrentUser } from '@/lib/auth';
-import toast from 'react-hot-toast';
+import  toast from 'react-hot-toast';
 import ClienteCard from '@/components/clientes/cliente-card';
 
 export default function ClienteDetallePage() {
@@ -91,12 +92,15 @@ export default function ClienteDetallePage() {
   }, [cliente, router]);
 
    const getEstadoPrestamo = (prestamo) => {
-    // Obtener el monto total de cuotas pagada
-    const totalPagado = prestamo.detalles_pago.reduce(
-      (sum, detalle) => sum + detalle.monto_aplicado,
-      0
-    );
-  
+    // Check if detalles_pago exists and is an array
+    const totalPagado = prestamo.detalles_pago && Array.isArray(prestamo.detalles_pago)
+        ? prestamo.detalles_pago.reduce(
+            (sum, detalle) => sum + detalle.monto_aplicado,
+            0
+        )
+        : 0; // Default to 0 if detalles_pago is undefined or not an array
+ 
+        
     // Calcular el monto restante por pagar
     const montoRestante = prestamo.monto_total - totalPagado;
   
@@ -113,9 +117,15 @@ export default function ClienteDetallePage() {
           Atrasado
         </span>
       );
+    } if (prestamo.estado === 'activo') {
+      return (
+        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+          Activo
+        </span>
+      );
     } else {
-      return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Activo</span>;
-    }
+      return <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">Pendiente</span>;
+    } 
   };
 
   if (loading) {
@@ -167,16 +177,26 @@ export default function ClienteDetallePage() {
         {/* Información del cliente */}
         <div className="lg:col-span-1">
           <ClienteCard cliente={cliente} showActions={false} />
-          {usuario && usuario.rol !== 'asesor' && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Asesor asignado</h3>
-              <p className="text-sm text-gray-900"> <span className="font-medium">Nombre:</span>{' '}
-
-                {asesor ? `${asesor.nombre} ${asesor.apellido}` : "No asignado"}
-                
-                </p>
+          {usuario && usuario.rol !== 'asesor' && (            
+            <div className="mt-4 bg-white shadow rounded-lg overflow-hidden p-4">
+              {asesor ? (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Asesor asignado</h3>
+                  <div className="flex items-center gap-x-2 ">
+                    <UserIcon className="h-5 w-5 text-gray-400" />
+                    <p className="text-sm text-gray-900">
+                      <span className="font-medium">{asesor.nombre} {asesor.apellido}</span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  message="Aún no se ha asignado un asesor a este cliente."
+                  icon={UserIcon}
+                />
+              )}
             </div>
-          )}
+            )}           
         </div>
 
         {/* Préstamos del cliente */}
@@ -236,12 +256,21 @@ export default function ClienteDetallePage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <span className="mr-2">
-                                {prestamo.detalles_pago.reduce((sum, detalle) => sum + detalle.monto_aplicado, 0)} / {prestamo.monto_total}
+                                {prestamo.detalles_pago && Array.isArray(prestamo.detalles_pago)
+                                    ? prestamo.detalles_pago.reduce((sum, detalle) => sum + detalle.monto_aplicado, 0)
+                                    : 0} / {prestamo.monto_total}
                              </span>
                             <div className="w-24 bg-gray-200 rounded-full h-2.5">
                               <div
                                 className="bg-indigo-600 h-2.5 rounded-full"
-                                style={{ width: `${(prestamo.detalles_pago.reduce((sum, detalle) => sum + detalle.monto_aplicado, 0) / prestamo.monto_total) * 100}%` }}
+                                style={{
+                                    width: `${
+                                        prestamo.detalles_pago && Array.isArray(prestamo.detalles_pago) && prestamo.monto_total !== 0
+                                            ? (prestamo.detalles_pago.reduce((sum, detalle) => sum + detalle.monto_aplicado, 0) / prestamo.monto_total) * 100
+                                            : 0 // Default to 0% if detalles_pago is undefined or if monto_total is zero
+                                    }%`,
+                                }}
+
                               ></div>
 
                            </div>
