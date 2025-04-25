@@ -51,12 +51,18 @@ export default function PrestamosTable({
   // Renderizar el estado del préstamo con un badge de color
   const getEstadoPrestamoBadge = (estadoCalculado) => {
     switch (estadoCalculado) {
-      case 'activo':
+      case 'pendiente':
         return (
-          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-            Activo
+          <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">
+            Pendiente
           </span>
         );
+      case 'activo':
+          return (
+            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+              Activo
+            </span>
+          );
       case 'completado':
         return (
           <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
@@ -101,6 +107,7 @@ export default function PrestamosTable({
             }
           >
             <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendientes</option>
             <option value="activo">Activos</option>
             <option value="completado">Completados</option>
             <option value="atrasado">Atrasados</option>

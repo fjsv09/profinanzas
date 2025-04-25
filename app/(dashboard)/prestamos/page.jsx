@@ -49,8 +49,10 @@ export default function PrestamosPage() {
       return 'completado';
     } else if (prestamo.estado === 'atrasado') {
       return 'atrasado';
-    } else {
+    } else if (prestamo.estado === 'activo') {
       return 'activo';
+    } else {
+      return 'pendiente';
     }
   };
 

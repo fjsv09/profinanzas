@@ -29,6 +29,7 @@ const PrestamoForm = ({
   const [showClienteSelector, setShowClienteSelector] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const feriados = []; // Lista de feriados
 
   const [formData, setFormData] = useState({
     monto: prestamo?.monto || '500',
@@ -49,11 +50,24 @@ const PrestamoForm = ({
     });
   };
 
-    useEffect(() => {
-        const monto = parseFloat(formData.monto) || 0;
-        const interes = parseFloat(formData.interes) || 0;
-        setSimpleInterest(monto * (1 + interes / 100));
-    }, [formData]);
+  // Función para verificar si una fecha es un feriado
+  const isHoliday = (date) => {
+    return false
+    // return feriados.some(feriado => {
+    //   const fechaFeriado = new Date(feriado);
+    //   return (
+    //     fechaFeriado.getDate() === date.getDate() &&
+    //     fechaFeriado.getMonth() === date.getMonth() &&
+    //     fechaFeriado.getFullYear() === date.getFullYear()
+    //   );
+    // });
+  };
+
+  useEffect(() => {
+    const monto = parseFloat(formData.monto) || 0;
+    const interes = parseFloat(formData.interes) || 0;
+    setSimpleInterest(monto * (1 + interes / 100));
+  }, [formData]);
 
   useEffect(() => {
     const calcularCuotas = () => {
@@ -70,7 +84,28 @@ const PrestamoForm = ({
 
         for (let i = 1; i <= totalCuotas; i++) {
           const fechaCuota = new Date(fechaActual);
-          fechaCuota.setDate(fechaActual.getDate() + i * 7); // Sumar 7 días por cuota semanal
+          switch (formData.frecuencia_pago) {
+            case 'diario':
+              let diasAgregados = 1;
+              while (diasAgregados > 0) {
+                fechaCuota.setDate(fechaCuota.getDate() + 1);
+                if (fechaCuota.getDay() !== 0 && !isHoliday(fechaCuota)) {
+                  diasAgregados--;
+                }
+              }
+              break;
+            case 'semanal':
+              fechaCuota.setDate(fechaCuota.getDate() + 7);
+              break;
+            case 'quincenal':
+              fechaCuota.setDate(fechaCuota.getDate() + 14);
+              break;
+            case 'mensual':
+              fechaCuota.setDate(fechaCuota.getDate() + 30);
+              break;
+            default:
+              break;
+          }
 
           cuotas.push({
             numero: i,
@@ -437,17 +472,16 @@ const PrestamoForm = ({
           <button
             type="submit"
             disabled={isSubmitting || !clienteSeleccionado}
-            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-              !clienteSeleccionado
+            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${!clienteSeleccionado
                 ? 'bg-indigo-400 cursor-not-allowed'
                 : 'bg-indigo-600 hover:bg-indigo-700'
-            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
           >
             {isSubmitting
               ? submittingText
               : isEditing
-              ? 'Enviar para aprobación'
-              : 'Enviar para aprobación'}
+                ? 'Enviar para aprobación'
+                : 'Enviar para aprobación'}
           </button>
         </div>
       </form>

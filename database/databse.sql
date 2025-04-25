@@ -275,6 +275,7 @@ CREATE TABLE clientes (
     telefono TEXT NOT NULL,
     direccion TEXT NOT NULL,
     referencias TEXT,
+    estado TEXT NOT NULL DEFAULT 'Activo' CHECK (estado IN ('Activo', 'Inactivo')),
     historial_pagos TEXT DEFAULT 'Nuevo' CHECK (historial_pagos IN ('Nuevo', 'Bueno', 'Regular', 'Malo')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -294,7 +295,7 @@ CREATE TABLE prestamos (
     frecuencia_pago TEXT NOT NULL CHECK (frecuencia_pago IN ('diario', 'semanal', 'quincenal', 'mensual')),
     total_cuotas INTEGER NOT NULL,
     --cuotas_pagadas NUMERIC DEFAULT 0, -- Eliminado: Ahora se calcula a partir de detalles_pago
-    estado TEXT NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'completado', 'atrasado')),
+    estado TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'activo', 'completado', 'atrasado')),
     fecha_inicio TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

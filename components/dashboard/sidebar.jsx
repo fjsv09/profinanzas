@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase'; // Import para consulta de aprobaciones pendientes
+import { prestamosService } from '@/lib/supabase'; // Import para consulta de aprobaciones pendientes
 
 export default function Sidebar({ user, isOpen, setIsOpen }) {
   const pathname = usePathname();
@@ -34,16 +34,13 @@ export default function Sidebar({ user, isOpen, setIsOpen }) {
     if (user?.rol === 'administrador' || user?.rol === 'admin_sistema') {
       const fetchPendingApprovals = async () => {
         try {
-          // En un sistema real:
-          // const { data } = await supabase
-          // .from('prestamos')
-          // .select('count', { count: 'exact' })
-          // .eq('estado_aprobacion', 'pendiente');
-          // setPendingApprovalsCount(data || 0);
-          
-          // Simulación para ejemplo
-          setPendingApprovalsCount(3);
+          const count = await prestamosService.getPendingApprovalsCount();
+          setPendingApprovalsCount(count);
         } catch (error) {
+            if (error.message === 'Cannot read properties of null (reading \'count\')') {
+                console.warn('No se encontraron aprobaciones pendientes.');
+                setPendingApprovalsCount(0);
+            }
           console.error('Error al obtener conteo de aprobaciones pendientes:', error);
           setPendingApprovalsCount(0);
         }
