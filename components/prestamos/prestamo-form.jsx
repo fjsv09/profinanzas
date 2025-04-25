@@ -29,7 +29,17 @@ const PrestamoForm = ({
   const [showClienteSelector, setShowClienteSelector] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const feriados = []; // Lista de feriados
+  
+  const feriados = [
+    new Date(2025, 3, 28),    // January 1st, 2024 (New Year's Day)
+    new Date(2025, 0, 1),    // January 1st, 2024 (New Year's Day)
+    new Date(2025, 3, 18),   // April 18th, 2024 (Holy Thursday)
+    new Date(2025, 3, 19),   // April 19th, 2024 (Good Friday)
+    new Date(2025, 4, 1),    // May 1st, 2024 (Labor Day)
+    new Date(2025, 6, 28),   // July 28th, 2024 (Independence Day)
+    new Date(2025, 6, 29),   // July 29th, 2024 (Independence Day)
+    new Date(2025, 11, 25),  // December 25th, 2024 (Christmas)
+  ];
 
   const [formData, setFormData] = useState({
     monto: prestamo?.monto || '500',
@@ -52,7 +62,7 @@ const PrestamoForm = ({
 
   // Función para verificar si una fecha es un feriado
   const isHoliday = (date) => {
-    return false
+    //return false
     // return feriados.some(feriado => {
     //   const fechaFeriado = new Date(feriado);
     //   return (
@@ -81,16 +91,24 @@ const PrestamoForm = ({
         const montoCuota = montoTotal / totalCuotas;
         const cuotas = [];
         const fechaActual = new Date();
+        let fechaCuota = new Date(fechaActual);
 
         for (let i = 1; i <= totalCuotas; i++) {
-          const fechaCuota = new Date(fechaActual);
           switch (formData.frecuencia_pago) {
             case 'diario':
-              let diasAgregados = 1;
-              while (diasAgregados > 0) {
-                fechaCuota.setDate(fechaCuota.getDate() + 1);
-                if (fechaCuota.getDay() !== 0 && !isHoliday(fechaCuota)) {
-                  diasAgregados--;
+              if (i === 1) {
+                fechaCuota.setDate(fechaCuota.getDate() + 2);
+                if (fechaCuota.getDay() == 0 ) {
+                  fechaCuota.setDate(fechaCuota.getDate() + 1);
+                }
+
+              } else {
+                let diasAgregados = 1;
+                while (diasAgregados > 0) {
+                  fechaCuota.setDate(fechaCuota.getDate() + 1);
+                  if (fechaCuota.getDay() !== 0 && !isHoliday(fechaCuota)) {
+                    diasAgregados--;
+                  }
                 }
               }
               break;
@@ -109,7 +127,7 @@ const PrestamoForm = ({
 
           cuotas.push({
             numero: i,
-            fecha: fechaCuota.toLocaleDateString(),
+            fecha: fechaCuota.toLocaleDateString('es-ES'),
             monto: montoCuota,
           });
         }
@@ -473,8 +491,8 @@ const PrestamoForm = ({
             type="submit"
             disabled={isSubmitting || !clienteSeleccionado}
             className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${!clienteSeleccionado
-                ? 'bg-indigo-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700'
+              ? 'bg-indigo-400 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700'
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
           >
             {isSubmitting
