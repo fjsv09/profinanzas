@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { prestamosService } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import toast from 'react-hot-toast';
-import { 
-  MagnifyingGlassIcon, 
-  CheckCircleIcon, 
+import {
+  MagnifyingGlassIcon,
+  CheckCircleIcon,
   XCircleIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
@@ -59,52 +59,11 @@ export default function AprobacionesPage() {
 
   const cargarSolicitudesPendientes = async () => {
     try {
-      // En un sistema real, esta sería una llamada a la API
-      // const data = await prestamosService.getSolicitudesPendientes();
-      
-      // Datos de ejemplo para simulación
-      const solicitudesData = [
-        {
-          id: 208,
-          cliente: { id: 4, nombre: 'Carlos', apellido: 'Rodríguez', dni: '78912345', historial_pagos: 'Bueno' },
-          monto: 2000,
-          interes: 10,
-          monto_total: 2200,
-          fecha_solicitud: '2025-03-15T14:30:00',
-          solicitado_por: { id: 3, nombre: 'Carlos', apellido: 'González' },
-          tipo: 'nuevo',
-          motivo: 'Inversión en negocio',
-          prestamo_anterior: null
-        },
-        {
-          id: 207,
-          cliente: { id: 1, nombre: 'María', apellido: 'López', dni: '45678912', historial_pagos: 'Bueno' },
-          monto: 1500,
-          interes: 10,
-          monto_total: 1650,
-          fecha_solicitud: '2025-03-14T10:45:00',
-          solicitado_por: { id: 2, nombre: 'María', apellido: 'López' },
-          tipo: 'renovacion',
-          motivo: 'Ampliación de capital',
-          prestamo_anterior: { id: 101, monto: 1000, cuotas_pagadas: 30, total_cuotas: 30 }
-        },
-        {
-          id: 206,
-          cliente: { id: 5, nombre: 'Lucía', apellido: 'Mendoza', dni: '56789123', historial_pagos: 'Regular' },
-          monto: 800,
-          interes: 12,
-          monto_total: 896,
-          fecha_solicitud: '2025-03-13T16:15:00',
-          solicitado_por: { id: 4, nombre: 'Ana', apellido: 'Martínez' },
-          tipo: 'nuevo',
-          motivo: 'Gastos familiares',
-          prestamo_anterior: null
-        }
-      ];
-      
-      setSolicitudesPendientes(solicitudesData);
+      const data = await prestamosService.getSolicitudesPendientes();
+      console.log('solicitudes pendientes', data);
+      setSolicitudesPendientes(data);
     } catch (error) {
-      console.error('Error al cargar solicitudes pendientes:', error);
+      console.error('Error al cargar solicitudes pendientes: ', error);
       toast.error('Error al cargar las solicitudes');
       throw error;
     }
@@ -112,51 +71,9 @@ export default function AprobacionesPage() {
 
   const cargarHistorialAprobaciones = async () => {
     try {
-      // En un sistema real, esta sería una llamada a la API
-      // const data = await prestamosService.getHistorialAprobaciones();
-      
-      // Datos de ejemplo para simulación
-      const historialData = [
-        {
-          id: 205,
-          cliente: { id: 1, nombre: 'María', apellido: 'López', dni: '45678912' },
-          monto: 1500,
-          interes: 10,
-          monto_total: 1650,
-          estado_aprobacion: 'aprobado',
-          fecha_solicitud: '2025-03-10T10:30:00',
-          fecha_aprobacion: '2025-03-10T14:45:00',
-          aprobado_por: { id: 6, nombre: 'Lucia', apellido: 'Ramírez' },
-          tipo: 'nuevo'
-        },
-        {
-          id: 204,
-          cliente: { id: 2, nombre: 'Juan', apellido: 'Pérez', dni: '12345678' },
-          monto: 2000,
-          interes: 12,
-          monto_total: 2240,
-          estado_aprobacion: 'rechazado',
-          fecha_solicitud: '2025-03-08T14:45:00',
-          fecha_aprobacion: '2025-03-09T09:15:00',
-          aprobado_por: { id: 6, nombre: 'Lucia', apellido: 'Ramírez' },
-          comentarios_aprobacion: 'Cliente con alto riesgo de morosidad',
-          tipo: 'renovacion'
-        },
-        {
-          id: 203,
-          cliente: { id: 3, nombre: 'Ana', apellido: 'García', dni: '87654321' },
-          monto: 1200,
-          interes: 10,
-          monto_total: 1320,
-          estado_aprobacion: 'aprobado',
-          fecha_solicitud: '2025-03-05T09:30:00',
-          fecha_aprobacion: '2025-03-05T11:20:00',
-          aprobado_por: { id: 6, nombre: 'Lucia', apellido: 'Ramírez' },
-          tipo: 'nuevo'
-        }
-      ];
-      
-      setHistorialAprobaciones(historialData);
+      const data = await prestamosService.getHistorialAprobaciones();
+      console.log('historial de aprobaciones', data);
+      setHistorialAprobaciones(data);
     } catch (error) {
       console.error('Error al cargar historial de aprobaciones:', error);
       toast.error('Error al cargar el historial');
@@ -168,10 +85,11 @@ export default function AprobacionesPage() {
   const solicitudesFiltradas = solicitudesPendientes.filter(item => {
     if (!searchTerm.trim()) return true;
     const searchLower = searchTerm.toLowerCase();
+    const cliente = item.cliente && item.cliente.length > 0 ? item.cliente[0] : null;
     return (
-      item.cliente.nombre.toLowerCase().includes(searchLower) ||
-      item.cliente.apellido.toLowerCase().includes(searchLower) ||
-      item.cliente.dni.includes(searchTerm) ||
+      (cliente && cliente.nombre.toLowerCase().includes(searchLower)) ||
+      (cliente && cliente.apellido.toLowerCase().includes(searchLower)) ||
+      (cliente && cliente.dni.includes(searchTerm)) ||
       item.id.toString().includes(searchTerm)
     );
   });
@@ -185,10 +103,11 @@ export default function AprobacionesPage() {
     .filter(item => {
       if (!searchTerm.trim()) return true;
       const searchLower = searchTerm.toLowerCase();
+      const cliente = item.cliente && item.cliente.length > 0 ? item.cliente[0] : null;
       return (
-        item.cliente.nombre.toLowerCase().includes(searchLower) ||
-        item.cliente.apellido.toLowerCase().includes(searchLower) ||
-        item.cliente.dni.includes(searchTerm) ||
+        (cliente && cliente.nombre.toLowerCase().includes(searchLower)) ||
+        (cliente && cliente.apellido.toLowerCase().includes(searchLower)) ||
+        (cliente && cliente.dni.includes(searchTerm)) ||
         item.id.toString().includes(searchTerm)
       );
     });
@@ -209,21 +128,25 @@ export default function AprobacionesPage() {
 
   const confirmarAccion = async () => {
     if (!solicitudActual) return;
-    
+
     try {
-      // En un sistema real, esto enviaría la aprobación o rechazo al backend
+
       const accion = modalTipo === 'aprobar' ? 'aprobada' : 'rechazada';
-      
-      // Simulación de llamada al servicio
-      // await prestamosService.procesarSolicitud(solicitudActual.id, {
-      //   estado: modalTipo === 'aprobar' ? 'aprobado' : 'rechazado',
-      //   comentarios,
-      //   aprobador_id: user.id
-      // });
-      
+      const data = {
+        estado: modalTipo === 'aprobar' ? 'aprobado' : 'rechazado',
+        comentarios: comentarios,
+        aprobador_id: user.id
+      };
+
+      const res = await prestamosService.procesarSolicitud(solicitudActual.id, data);
+      console.log('res', res);
+
+
       // Quitar la solicitud procesada de la lista
-      setSolicitudesPendientes(solicitudesPendientes.filter(s => s.id !== solicitudActual.id));
-      
+      setSolicitudesPendientes(
+        solicitudesPendientes.filter((s) => s.id !== solicitudActual.id)
+      );
+
       // Agregar al historial
       const nuevaAprobacion = {
         ...solicitudActual,
@@ -232,9 +155,9 @@ export default function AprobacionesPage() {
         aprobado_por: { id: user.id, nombre: user.nombre, apellido: user.apellido },
         comentarios_aprobacion: comentarios || undefined
       };
-      
+
       setHistorialAprobaciones([nuevaAprobacion, ...historialAprobaciones]);
-      
+
       setIsModalOpen(false);
       toast.success(`Solicitud ${accion} correctamente`);
     } catch (error) {
@@ -262,17 +185,16 @@ export default function AprobacionesPage() {
           Volver
         </button>
       </div>
-      
+
       {/* Pestañas de navegación */}
       <div className="mb-6">
         <nav className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('pendientes')}
-            className={`py-4 px-6 font-medium text-sm ${
-              activeTab === 'pendientes' 
-                ? 'border-b-2 border-indigo-500 text-indigo-600' 
+            className={`py-4 px-6 font-medium text-sm ${activeTab === 'pendientes'
+                ? 'border-b-2 border-indigo-500 text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             Pendientes
             {solicitudesPendientes.length > 0 && (
@@ -283,17 +205,16 @@ export default function AprobacionesPage() {
           </button>
           <button
             onClick={() => setActiveTab('historial')}
-            className={`py-4 px-6 font-medium text-sm ${
-              activeTab === 'historial' 
-                ? 'border-b-2 border-indigo-500 text-indigo-600' 
+            className={`py-4 px-6 font-medium text-sm ${activeTab === 'historial'
+                ? 'border-b-2 border-indigo-500 text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             Historial
           </button>
         </nav>
       </div>
-      
+
       {/* Búsqueda y filtros */}
       <div className="mb-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
         {activeTab === 'historial' && (
@@ -322,7 +243,7 @@ export default function AprobacionesPage() {
           />
         </div>
       </div>
-      
+
       {/* Contenido de la pestaña actual */}
       {activeTab === 'pendientes' ? (
         // Lista de solicitudes pendientes
@@ -341,7 +262,9 @@ export default function AprobacionesPage() {
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => router.push(`/prestamos/${solicitud.id}`)}
+                      onClick={() =>
+                        router.push(`/prestamos/${solicitud.id}`)
+                      }
                       className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                     >
                       Ver detalles
@@ -350,6 +273,7 @@ export default function AprobacionesPage() {
                       onClick={() => handleRechazar(solicitud)}
                       className="px-3 py-1 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100"
                     >
+
                       Rechazar
                     </button>
                     <button
@@ -363,15 +287,15 @@ export default function AprobacionesPage() {
                 <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Cliente</h4>
-                    <p className="text-sm font-semibold text-gray-900">{solicitud.cliente.nombre} {solicitud.cliente.apellido}</p>
-                    <p className="text-xs text-gray-500">DNI: {solicitud.cliente.dni}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Historial: <span className={`px-1 py-0.5 rounded text-xs ${
-                        solicitud.cliente.historial_pagos === 'Bueno' ? 'bg-green-100 text-green-800' :
-                        solicitud.cliente.historial_pagos === 'Regular' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>{solicitud.cliente.historial_pagos}</span>
-                    </p>
+
+                    <>
+                      <p className="text-sm font-semibold text-gray-900">{solicitud.cliente.nombre} {solicitud.cliente.apellido}</p>
+                      <p className="text-xs text-gray-500">DNI: {solicitud.cliente.dni}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Historial: <span className={`px-1 py-0.5 rounded text-xs ${solicitud.cliente.historial_pagos === 'Bueno' ? 'bg-green-100 text-green-800' : solicitud.cliente.historial_pagos === 'Regular' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{solicitud.cliente.historial_pagos}</span>
+                      </p>
+                    </>
+
                   </div>
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Datos del préstamo</h4>
@@ -389,7 +313,7 @@ export default function AprobacionesPage() {
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Motivo</h4>
                     <p className="text-sm text-gray-900">{solicitud.motivo}</p>
                     {solicitud.tipo === 'renovacion' && solicitud.prestamo_anterior && (
-                      <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                      <div className="mt-2 p-2 bg-blue-50 rounded-md" key={solicitud.prestamo_anterior.id}>
                         <p className="text-xs text-blue-800">Préstamo anterior: #{solicitud.prestamo_anterior.id}</p>
                         <p className="text-xs text-blue-800">Monto: S/ {solicitud.prestamo_anterior.monto.toFixed(2)}</p>
                         <p className="text-xs text-blue-800">Cuotas pagadas: {solicitud.prestamo_anterior.cuotas_pagadas}/{solicitud.prestamo_anterior.total_cuotas}</p>
@@ -445,10 +369,12 @@ export default function AprobacionesPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {item.cliente.nombre} {item.cliente.apellido}
+
                         </div>
                         <div className="text-xs text-gray-500">
                           DNI: {item.cliente.dni}
                         </div>
+
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         S/ {item.monto.toFixed(2)}
@@ -460,11 +386,10 @@ export default function AprobacionesPage() {
                         {new Date(item.fecha_solicitud).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          item.estado_aprobacion === 'aprobado' 
-                            ? 'bg-green-100 text-green-800' 
+                        <span className={`px-2 py-1 text-xs rounded-full ${item.estado_aprobacion === 'aprobado'
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {item.estado_aprobacion === 'aprobado' ? 'Aprobado' : 'Rechazado'}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">
@@ -477,7 +402,13 @@ export default function AprobacionesPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.aprobado_por.nombre} {item.aprobado_por.apellido}
+                        {item.aprobado_por ? (
+                          Array.isArray(item.aprobado_por) ? `${item.aprobado_por[0]?.nombre || '-'} ${item.aprobado_por[0]?.apellido || '-'}` : `${item.aprobado_por?.nombre || '-'} ${item.aprobado_por?.apellido || '-'}`
+                        ) : (
+                          '-'
+                        )}
+
+
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                         <button
@@ -501,7 +432,7 @@ export default function AprobacionesPage() {
           </div>
         </div>
       )}
-      
+
       {/* Modal de confirmación */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -511,9 +442,8 @@ export default function AprobacionesPage() {
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
-                  <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${
-                    modalTipo === 'aprobar' ? 'bg-green-100' : 'bg-red-100'
-                  } sm:mx-0 sm:h-10 sm:w-10`}>
+                  <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${modalTipo === 'aprobar' ? 'bg-green-100' : 'bg-red-100'
+                    } sm:mx-0 sm:h-10 sm:w-10`}>
                     {modalTipo === 'aprobar' ? (
                       <CheckCircleIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
                     ) : (
@@ -526,8 +456,8 @@ export default function AprobacionesPage() {
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        {modalTipo === 'aprobar' 
-                          ? '¿Estás seguro de que deseas aprobar esta solicitud de préstamo?' 
+                        {modalTipo === 'aprobar'
+                          ? '¿Estás seguro de que deseas aprobar esta solicitud de préstamo?'
                           : '¿Estás seguro de que deseas rechazar esta solicitud de préstamo?'
                         }
                       </p>
@@ -553,11 +483,10 @@ export default function AprobacionesPage() {
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"
-                  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${
-                    modalTipo === 'aprobar' 
-                      ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${modalTipo === 'aprobar'
+                      ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
                       : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                  }`}
+                    }`}
                   onClick={confirmarAccion}
                   disabled={modalTipo === 'rechazar' && !comentarios.trim()}
                 >
