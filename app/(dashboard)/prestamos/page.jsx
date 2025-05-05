@@ -17,51 +17,25 @@ export default function PrestamosPage() {
 
   useEffect(() => {
     const fetchPrestamosYUsuario = async () => {
-    try {
+      try {
         const currentUser = await getCurrentUser();
         setUsuario(currentUser);
         const prestamosData = await prestamosService.getAll(currentUser); //se envia el usuario como parametro
         setPrestamos(prestamosData);
-    } catch (error) {
+      } catch (error) {
         console.error('Error al obtener préstamos:', error);
         toast.error('Error al cargar los préstamos');
-    } finally {
+      } finally {
         setLoading(false);
-    }
+      }
     };
 
     fetchPrestamosYUsuario();
-}, []);
-
-  // Función para calcular el estado de un préstamo
-  const getEstadoPrestamo = (prestamo) => {
-    // Verificar si detalles_pago existe antes de usar reduce
-    const totalPagado = prestamo.detalles_pago
-      ? prestamo.detalles_pago.reduce(
-          (sum, detalle) => sum + detalle.monto_aplicado,
-          0
-        )
-      : 0;
-
-    const montoRestante = prestamo.monto_total - totalPagado;
-
-    if (montoRestante <= 0) {
-      return 'completado';
-    } else if (prestamo.estado === 'atrasado') {
-      return 'atrasado';
-    } else if (prestamo.estado === 'activo') {
-      return 'activo';
-    } else {
-      return 'pendiente';
-    }
-  };
-
+  }, []);
+    
   // Filtrar y ordenar los préstamos con useMemo
   const filteredPrestamos = useMemo(() => {
-    let filtrados = prestamos.map((prestamo) => ({
-      ...prestamo,
-      estadoCalculado: getEstadoPrestamo(prestamo),
-    })); // Calcular el estado del préstamo
+    let filtrados = [...prestamos]; // Crear una copia para evitar mutaciones directas
 
     // Aplicar filtro de estado
     if (filtroEstado !== 'todos') {

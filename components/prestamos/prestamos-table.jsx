@@ -42,46 +42,45 @@ export default function PrestamosTable({
   // Verificar si el usuario puede eliminar un préstamo
   const puedeEliminar = (prestamo) => {
     if (!usuario) return false;
-    if (['administrador', 'admin_sistema'].includes(usuario.rol))
-      return true;
-    // Los supervisores y asesores no pueden eliminar préstamos
-    return false;
+    return ['administrador', 'admin_sistema'].includes(usuario.rol);
   };
 
   // Renderizar el estado del préstamo con un badge de color
   const getEstadoPrestamoBadge = (estadoCalculado) => {
+    let color = '';
     switch (estadoCalculado) {
       case 'pendiente':
-        return (
-          <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">
-            Pendiente
-          </span>
-        );
+        color = 'gray';
+        break;
       case 'activo':
-          return (
-            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-              Activo
-            </span>
-          );
+        color = 'green';
+        break;
       case 'completado':
-        return (
-          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-            Completado
-          </span>
-        );
+        color = 'blue';
+        break;
       case 'atrasado':
-        return (
-          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-            Atrasado
-          </span>
-        );
+        color = 'red';
+        break;
       default:
-        return (
-          <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
-            {estadoCalculado}
-          </span>
-        );
+        color = 'gray';
+        break;
     }
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full bg-${color}-100 text-${color}-800 capitalize`}>
+        {estadoCalculado}
+      </span>
+    );
+  };
+  const calcularPorcentaje = (prestamo) => {
+    if (prestamo.cuotas_pagadas === undefined || prestamo.total_cuotas === undefined) {
+        return 0;
+    }
+    const porcentaje = (prestamo.cuotas_pagadas / prestamo.total_cuotas);
+    return isNaN(porcentaje) ? 0 : porcentaje * 100;
+  };
+
+  const getProgressBarColor = (prestamo) => {
+    return prestamo.estadoCalculado === 'atrasado' ? 'bg-red-600' : 'bg-indigo-600';
   };
 
   return (
@@ -198,17 +197,11 @@ export default function PrestamosTable({
                       </span>
                       <div className="w-24 bg-gray-200 rounded-full h-2.5">
                         <div
-                          className={`h-2.5 rounded-full ${
-                            prestamo.estadoCalculado === 'atrasado'
-                              ? 'bg-red-600'
-                              : 'bg-indigo-600'
-                          }`}
+                          className={`h-2.5 rounded-full ${getProgressBarColor(
+                            prestamo
+                          )}`}
                           style={{
-                            width: `${
-                              (prestamo.cuotas_pagadas /
-                                prestamo.total_cuotas) *
-                              100
-                            }%`,
+                            width: `${calcularPorcentaje(prestamo)}%`,
                           }}
                         ></div>
                       </div>
