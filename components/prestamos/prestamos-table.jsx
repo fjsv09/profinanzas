@@ -49,7 +49,7 @@ export default function PrestamosTable({
   const getEstadoPrestamoBadge = (estadoCalculado) => {
     let color = '';
     switch (estadoCalculado) {
-      case 'pendiente':
+      case 'inactivo':
         color = 'gray';
         break;
       case 'activo':
@@ -106,7 +106,7 @@ export default function PrestamosTable({
             }
           >
             <option value="todos">Todos los estados</option>
-            <option value="pendiente">Pendientes</option>
+            <option value="inactivo">Inactivo</option>
             <option value="activo">Activos</option>
             <option value="completado">Completados</option>
             <option value="atrasado">Atrasados</option>

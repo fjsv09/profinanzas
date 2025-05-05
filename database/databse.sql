@@ -41,7 +41,7 @@ CREATE TABLE prestamos (
     monto_total DECIMAL(10, 2) NOT NULL,
     frecuencia_pago TEXT NOT NULL CHECK (frecuencia_pago IN ('diario', 'semanal', 'quincenal', 'mensual')),
     total_cuotas INTEGER NOT NULL,
-    estado TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'activo', 'completado', 'atrasado')),
+    estado TEXT NOT NULL DEFAULT 'inactivo' CHECK (estado IN ('inactivo', 'activo', 'completado', 'atrasado')),
     fecha_inicio TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
