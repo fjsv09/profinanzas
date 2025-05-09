@@ -5,43 +5,80 @@ import { useRouter } from 'next/navigation';
 export default function SimuladorPrestamo() {
   const router = useRouter();
   const [monto, setMonto] = useState(1000);
-  const [interes, setInteres] = useState(10);
+  const [interes, setInteres] = useState(20);
   const [plazo, setPlazo] = useState(30);
   const [frecuenciaPago, setFrecuenciaPago] = useState('diario');
   const [cuotas, setCuotas] = useState([]);
+
+  // Datos de feriados
+  const feriados = [
+    "01/01", "01/04", "02/04", "05/05", "29/06", "28/07",
+    "29/07", "30/08", "08/10", "01/11", "08/12", "25/12"
+  ];
+
+  const isFeriado = (date) => {
+    return feriados.includes(`${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`);
+  };
 
   useEffect(() => {
     calcularCuotas();
   }, [monto, interes, plazo, frecuenciaPago]);
 
+
+  const getNextValidDate = (fecha) => {
+    let tempFecha = new Date(fecha);
+    while (tempFecha.getDay() === 0 || isFeriado(tempFecha)) {
+      tempFecha.setDate(tempFecha.getDate() + 1);
+    }
+    return tempFecha;
+  };
+
+
   const calcularCuotas = () => {
     const montoTotal = monto * (1 + interes / 100);
     const montoCuota = parseFloat((montoTotal / plazo).toFixed(2));
     const cuotasGeneradas = [];
-    
+
     // Función para determinar el incremento de días según la frecuencia
     const incrementoDias = {
       'diario': 1,
       'semanal': 7,
-      'quincenal': 15,
+      'quincenal': 14,
       'mensual': 30
     };
-    
+
     const incremento = incrementoDias[frecuenciaPago];
     const fechaActual = new Date();
-    
+    let fechaInicial = new Date(fechaActual);
+
+    if (frecuenciaPago === "diario") {
+      fechaInicial.setDate(fechaInicial.getDate() + 1);
+
+      fechaInicial = getNextValidDate(fechaInicial);
+
+    }
+
     for (let i = 0; i < plazo; i++) {
-      const fechaPago = new Date(fechaActual);
-      fechaPago.setDate(fechaPago.getDate() + incremento * (i + 1));
+      let fechaPago = new Date(fechaInicial);
+      for (let j = 0; j <= i; j++) {
+        fechaPago.setDate(fechaPago.getDate() + incremento);
+        fechaPago = getNextValidDate(fechaPago);
+      }
+
       cuotasGeneradas.push({
         numero: i + 1,
-        fecha: fechaPago.toLocaleDateString(),
+        fecha: fechaPago.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
         monto: montoCuota
       });
     }
-    
+
     setCuotas(cuotasGeneradas);
   };
+
 
   return (
     <div className="bg-white shadow rounded-lg p-6">

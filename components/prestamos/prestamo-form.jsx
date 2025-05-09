@@ -29,16 +29,9 @@ const PrestamoForm = ({
   const [showClienteSelector, setShowClienteSelector] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  
   const feriados = [
-    new Date(2025, 3, 28),    // January 1st, 2024 (New Year's Day)
-    new Date(2025, 0, 1),    // January 1st, 2024 (New Year's Day)
-    new Date(2025, 3, 18),   // April 18th, 2024 (Holy Thursday)
-    new Date(2025, 3, 19),   // April 19th, 2024 (Good Friday)
-    new Date(2025, 4, 1),    // May 1st, 2024 (Labor Day)
-    new Date(2025, 6, 28),   // July 28th, 2024 (Independence Day)
-    new Date(2025, 6, 29),   // July 29th, 2024 (Independence Day)
-    new Date(2025, 11, 25),  // December 25th, 2024 (Christmas)
+    "01/01", "01/04", "02/04", "05/05", "29/06", "28/07",
+    "29/07", "30/08", "08/10", "01/11", "08/12", "25/12"
   ];
 
   const [formData, setFormData] = useState({
@@ -60,17 +53,12 @@ const PrestamoForm = ({
     });
   };
 
-  // Función para verificar si una fecha es un feriado
-  const isHoliday = (date) => {
-    //return false
-    // return feriados.some(feriado => {
-    //   const fechaFeriado = new Date(feriado);
-    //   return (
-    //     fechaFeriado.getDate() === date.getDate() &&
-    //     fechaFeriado.getMonth() === date.getMonth() &&
-    //     fechaFeriado.getFullYear() === date.getFullYear()
-    //   );
-    // });
+  const isFeriado = (date) => {
+    return feriados.includes(`${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`);
+  };
+  const getNextValidDate = (fecha) => {
+    let tempFecha = new Date(fecha);
+    while (tempFecha.getDay() === 0 || isFeriado(tempFecha)) { tempFecha.setDate(tempFecha.getDate() + 1); } return tempFecha;
   };
 
   useEffect(() => {
@@ -84,57 +72,39 @@ const PrestamoForm = ({
       const monto = parseFloat(formData.monto) || 0;
       const interes = parseFloat(formData.interes) || 0;
       const totalCuotas = parseInt(formData.total_cuotas) || 0;
+      const montoTotal = monto * (1 + interes / 100);
+      const montoCuota = parseFloat((montoTotal / totalCuotas).toFixed(2));
+      const cuotas = [];
+      // Función para determinar el incremento de días según la frecuencia
+      const incrementoDias = {
+        'diario': 1,
+        'semanal': 7,
+        'quincenal': 14,
+        'mensual': 30
+      };
+      const incremento = incrementoDias[formData.frecuencia_pago];
+      const fechaActual = new Date();
+      let fechaInicial = new Date(fechaActual);
 
-      if (monto > 0 && interes >= 0 && totalCuotas > 0) {
-        const interesMensual = interes / 100;
-        const montoTotal = monto * (1 + interesMensual);
-        const montoCuota = montoTotal / totalCuotas;
-        const cuotas = [];
-        const fechaActual = new Date();
-        let fechaCuota = new Date(fechaActual);
-
-        for (let i = 1; i <= totalCuotas; i++) {
-          switch (formData.frecuencia_pago) {
-            case 'diario':
-              if (i === 1) {
-                fechaCuota.setDate(fechaCuota.getDate() + 2);
-                if (fechaCuota.getDay() == 0 ) {
-                  fechaCuota.setDate(fechaCuota.getDate() + 1);
-                }
-
-              } else {
-                let diasAgregados = 1;
-                while (diasAgregados > 0) {
-                  fechaCuota.setDate(fechaCuota.getDate() + 1);
-                  if (fechaCuota.getDay() !== 0 && !isHoliday(fechaCuota)) {
-                    diasAgregados--;
-                  }
-                }
-              }
-              break;
-            case 'semanal':
-              fechaCuota.setDate(fechaCuota.getDate() + 7);
-              break;
-            case 'quincenal':
-              fechaCuota.setDate(fechaCuota.getDate() + 14);
-              break;
-            case 'mensual':
-              fechaCuota.setDate(fechaCuota.getDate() + 30);
-              break;
-            default:
-              break;
-          }
-
-          cuotas.push({
-            numero: i,
-            fecha: fechaCuota.toLocaleDateString('es-ES'),
-            monto: montoCuota,
-          });
-        }
-        setCalculatedCuotas(cuotas);
-      } else {
-        setCalculatedCuotas([]);
+      if (formData.frecuencia_pago === "diario") {
+        fechaInicial.setDate(fechaInicial.getDate() + 1);
+        fechaInicial = getNextValidDate(fechaInicial);
       }
+
+      for (let i = 0; i < totalCuotas; i++) {
+        let fechaPago = new Date(fechaInicial);
+        for (let j = 0; j <= i; j++) {
+          fechaPago.setDate(fechaPago.getDate() + incremento);
+          fechaPago = getNextValidDate(fechaPago);
+        }
+
+        cuotas.push({
+          numero: i + 1,
+          fecha: fechaPago.toLocaleDateString('es-ES'),
+          monto: montoCuota,
+        });
+      }
+      setCalculatedCuotas(cuotas);
     };
 
     calcularCuotas();
